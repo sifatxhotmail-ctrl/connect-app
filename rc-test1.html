@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>reCAPTCHA test</title>
+<style>body{margin:0;padding:20px;font:15px/1.5 system-ui,sans-serif;background:#0f0e1a;color:#eee}h1{font-size:20px}input,select,button{box-sizing:border-box;width:100%;padding:13px 14px;border-radius:14px;border:1px solid #ffffff22;background:#1b1a2b;color:#fff;font-size:14px;margin:6px 0}button{border:0;background:#7c3aed;font-weight:700;font-size:15px}pre{white-space:pre-wrap;word-break:break-word;background:#1b1a2b;padding:14px;border-radius:14px;font-size:13px}.ok{color:#6ee7b7}.bad{color:#fca5a5}</style></head>
+<body>
+<h1>reCAPTCHA test</h1>
+<label>Key type</label>
+<select id="mode"><option value="ent">Enterprise (current key)</option><option value="v3">Classic v3 (new key)</option></select>
+<label>Site key</label>
+<input id="key" value="6Les7_wtAAAAAMiwZ_cACmdCHSTVrgNIW9nTQ9Lz">
+<button id="go">Run test</button>
+<pre id="out">Not run yet.</pre>
+<script>
+var out=document.getElementById('out');
+function log(t,c){out.innerHTML+='\n<span class="'+(c||'')+'">'+t.replace(/</g,'&lt;')+'</span>'}
+document.getElementById('go').onclick=function(){
+ var KEY=document.getElementById('key').value.trim(),ent=document.getElementById('mode').value==='ent',done=false;
+ out.textContent='Host: '+location.hostname+'\nMode: '+(ent?'Enterprise':'v3')+'\nOnline: '+navigator.onLine+'\n';
+ var s=document.createElement('script');
+ s.src=ent?'https://www.google.com/recaptcha/enterprise.js?render='+KEY:'https://www.google.com/recaptcha/api.js?render='+KEY;
+ s.onerror=function(){log('1) Script load: BLOCKED','bad')};
+ s.onload=function(){
+  log('1) Script load: OK','ok');
+  var g=ent?(window.grecaptcha&&grecaptcha.enterprise):window.grecaptcha;
+  if(!g){log('2) grecaptcha object missing','bad');return}
+  g.ready(function(){
+   log('2) ready: OK','ok');log('3) Asking Google for a token (waiting up to 15 seconds)...');
+   var t0=Date.now();
+   var timer=setTimeout(function(){if(!done){done=true;log('3) NO ANSWER after 15 seconds. Google did not return a token for this key on this domain.','bad')}},15000);
+   g.execute(KEY,{action:'test'}).then(function(t){if(done)return;done=true;clearTimeout(timer);log('3) Token: OK ('+t.length+' chars, '+(Date.now()-t0)+' ms). It works on this domain.','ok')},function(e){if(done)return;done=true;clearTimeout(timer);log('3) Token: FAILED -> '+(e&&e.message||e),'bad')});
+  });
+ };
+ document.head.appendChild(s);
+};
+</script></body></html>
