@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>reCAPTCHA test</title>
+<style>body{margin:0;padding:20px;font:15px/1.5 system-ui,sans-serif;background:#0f0e1a;color:#eee}h1{font-size:20px}button{padding:14px 18px;border:0;border-radius:14px;background:#7c3aed;color:#fff;font-weight:700;font-size:15px;width:100%;margin:10px 0}pre{white-space:pre-wrap;word-break:break-word;background:#1b1a2b;padding:14px;border-radius:14px;font-size:13px}.ok{color:#6ee7b7}.bad{color:#fca5a5}</style></head>
+<body>
+<h1>reCAPTCHA Enterprise test</h1>
+<p>Tap the button. Send me a screenshot of the result.</p>
+<button id="go">Run test</button>
+<pre id="out">Not run yet.</pre>
+<script>
+var KEY='6Les7_wtAAAAAMiwZ_cACmdCHSTVrgNIW9nTQ9Lz';
+var out=document.getElementById('out');
+function log(t,c){out.innerHTML+='\n<span class="'+(c||'')+'">'+t.replace(/</g,'&lt;')+'</span>'}
+document.getElementById('go').onclick=function(){
+ out.textContent='Host: '+location.hostname+'\nBrowser: '+navigator.userAgent.slice(0,90)+'\nReferrer policy: '+(document.referrerPolicy||'(default)')+'\n';
+ var s=document.createElement('script');
+ s.src='https://www.google.com/recaptcha/enterprise.js?render='+KEY;
+ s.onerror=function(){log('1) Script load: BLOCKED. Your browser, ad-blocker, private DNS or network blocks google.com/recaptcha.','bad')};
+ s.onload=function(){
+  log('1) Script load: OK','ok');
+  if(!window.grecaptcha||!grecaptcha.enterprise){log('2) grecaptcha.enterprise is missing','bad');return}
+  grecaptcha.enterprise.ready(function(){
+   log('2) ready: OK','ok');
+   grecaptcha.enterprise.execute(KEY,{action:'test'}).then(function(t){log('3) Token: OK ('+t.length+' chars). reCAPTCHA works on this domain.','ok')},function(e){log('3) Token: FAILED -> '+(e&&e.message||e),'bad')});
+  });
+ };
+ document.head.appendChild(s);
+};
+</script></body></html>
